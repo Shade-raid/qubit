@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quantum Idle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Quantum Idle – Newgrounds Build</title>
   <style>
     :root {
       --bg: #060712;
@@ -13,17 +13,24 @@
       --good: #66ffb3;
       --warn: #ffd36d;
       --bad: #ff7676;
+      --ng-yellow: #ffcc00;
     }
-    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-    #gameCanvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: radial-gradient(1200px 800px at 50% 50%, #0a0b1e 0%, #060712 60%, #04050d 100%); }
-    .ui { position: fixed; inset: 0; pointer-events: none; }
+    html, body { height: 100%; margin: 0; background: #000; color: var(--fg); font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+    /* --- Scaled Stage (Newgrounds embed friendly) --- */
+    .stage-wrap { position: fixed; inset: 0; display: grid; place-items: center; background: #000; overflow: hidden; }
+    .stage { position: relative; width: 1280px; height: 720px; transform-origin: top left; }
+    #gameCanvas { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; display: block; background: radial-gradient(1200px 800px at 50% 50%, #0a0b1e 0%, #060712 60%, #04050d 100%); }
+
+    /* UI overlay bound to 1280x720 logical space */
+    .ui { position: absolute; inset: 0; pointer-events: none; }
     .hud { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
     .pill { pointer-events: auto; background: rgba(10, 12, 28, 0.6); border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 999px; backdrop-filter: blur(6px); box-shadow: 0 4px 18px rgba(0,0,0,0.25);
       display: flex; align-items: center; gap: 8px; font-weight: 600; }
     .pill .value { color: var(--accent); }
-    .panel { pointer-events: auto; position: absolute; right: 12px; top: 56px; width: 320px; max-width: calc(100% - 24px); background: rgba(10, 12, 28, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 12px; backdrop-filter: blur(8px); box-shadow: 0 6px 28px rgba(0,0,0,0.35); }
+    .panel { pointer-events: auto; position: absolute; right: 12px; top: 56px; width: 360px; max-width: calc(100% - 24px); background: rgba(10, 12, 28, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 12px; backdrop-filter: blur(8px); box-shadow: 0 6px 28px rgba(0,0,0,0.35); }
     .panel h3 { margin: 6px 0 10px; font-size: 16px; letter-spacing: 0.3px; opacity: 0.95; }
-    .btn { width: 100%; margin: 6px 0; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(180deg, rgba(28, 34, 72, 0.7), rgba(20, 22, 48, 0.7)); color: var(--fg); border-radius: 12px; cursor: pointer; text-align: left; font-weight: 600; transition: transform .05s ease, filter .15s ease; }
+    .btn { width: 100%; margin: 6px 0; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(180deg, rgba(28, 34, 72, 0.7), rgba(20, 22, 48, 0.7)); color: var(--fg); border-radius: 12px; cursor: pointer; text-align: left; font-weight: 700; transition: transform .05s ease, filter .15s ease; }
     .btn:hover { filter: brightness(1.08); }
     .btn:active { transform: translateY(1px) scale(0.995); }
     .btn.disabled { opacity: 0.45; cursor: not-allowed; }
@@ -31,21 +38,21 @@
     .small { font-size: 12px; opacity: 0.8; }
 
     /* Menus */
-    .menu { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(1200px 800px at 50% 40%, #0e1030 0%, #07081a 55%, #04050d 100%); }
-    .menu-inner { width: min(720px, 92vw); padding: 28px; border-radius: 18px; background: rgba(8,10,24,0.65); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 18px 80px rgba(0,0,0,0.55); backdrop-filter: blur(10px);}    
-    .title { font-size: clamp(28px, 5vw, 60px); font-weight: 900; letter-spacing: 0.8px; margin: 0 0 10px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .menu { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(1200px 800px at 50% 40%, #0e1030 0%, #07081a 55%, #04050d 100%); }
+    .menu-inner { width: 760px; max-width: 92%; padding: 28px; border-radius: 18px; background: rgba(8,10,24,0.65); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 18px 80px rgba(0,0,0,0.55); backdrop-filter: blur(10px);}    
+    .title { font-size: 56px; font-weight: 900; letter-spacing: 0.8px; margin: 0 0 10px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .subtitle { margin: 0 0 18px; opacity: 0.85; }
     .menu-buttons { display: grid; grid-template-columns: 1fr; gap: 12px; }
     .menu-btn { padding: 14px 16px; border-radius: 14px; font-weight: 800; border: 1px solid rgba(255,255,255,0.12); cursor: pointer; background: linear-gradient(180deg, rgba(60,72,160,0.75), rgba(28,34,88,0.75)); }
     .menu-btn.secondary { background: linear-gradient(180deg, rgba(32,40,84,0.75), rgba(20,24,52,0.75)); font-weight: 700; }
     .menu-btn:active { transform: translateY(1px); }
     .credits { margin-top: 10px; font-size: 13px; opacity: 0.8; }
-    .corner-credit { position: fixed; right: 14px; bottom: 10px; font-size: 12px; opacity: 0.9; }
+    .corner-credit { position: absolute; right: 14px; bottom: 10px; font-size: 12px; opacity: 0.9; }
 
     /* Modals */
-    .modal { position: fixed; inset: 0; display: none; place-items: center; background: rgba(0,0,0,0.4); }
+    .modal { position: absolute; inset: 0; display: none; place-items: center; background: rgba(0,0,0,0.4); }
     .modal.open { display: grid; }
-    .modal-card { width: min(560px, 92vw); padding: 20px; border-radius: 16px; background: rgba(8,10,24,0.85); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(10px); }
+    .modal-card { width: min(560px, 92%); padding: 20px; border-radius: 16px; background: rgba(8,10,24,0.85); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(10px); }
 
     /* Floating text */
     .floating { position: absolute; pointer-events: none; will-change: transform, opacity; font-weight: 800; text-shadow: 0 2px 12px rgba(0,0,0,0.5); }
@@ -54,114 +61,146 @@
     .phase-tag { position: absolute; top: 8px; left: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); padding: 6px 10px; border-radius: 10px; font-size: 12px; letter-spacing: 0.5px; font-weight: 700; }
 
     /* Toasts */
-    .toasts { position: fixed; right: 14px; bottom: 14px; display: grid; gap: 8px; width: min(360px, 92vw); pointer-events: none; }
+    .toasts { position: absolute; right: 14px; bottom: 14px; display: grid; gap: 8px; width: 360px; max-width: 92%; pointer-events: none; }
     .toast { background: rgba(16, 20, 48, 0.85); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 10px 12px; font-size: 13px; pointer-events: auto; }
+
+    /* --- NG Preloader --- */
+    .preloader { position: fixed; inset: 0; display: grid; place-items: center; background: #111; z-index: 10; }
+    .pre-inner { width: 520px; max-width: 86vw; display: grid; gap: 16px; text-align: center; }
+    .ng-mark { font-weight: 900; font-size: 22px; letter-spacing: 1px; color: #111; background: var(--ng-yellow); padding: 10px 12px; border-radius: 10px; text-transform: uppercase; }
+    .bar { height: 10px; background: #222; border-radius: 999px; overflow: hidden; border: 1px solid #333; }
+    .fill { height: 100%; width: 0%; background: var(--ng-yellow); box-shadow: 0 0 18px rgba(255,204,0,0.6) inset; transition: width .2s ease; }
+
+    /* Touch hint */
+    .touch-hint { position: absolute; left: 12px; bottom: 12px; font-size: 12px; opacity: .8; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.12); padding: 6px 10px; border-radius: 10px; }
+
+    /* Fullscreen */
+    .fs-btn { position: absolute; top: 8px; right: 8px; pointer-events: auto; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(20,22,48,0.6); font-weight: 700; cursor: pointer; }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-  <div class="ui" id="ui">
-    <div class="hud">
-      <div class="pill" title="Quantum Energy">
-        QE: <span class="value" id="qeVal">0</span>
-      </div>
-      <div class="pill" title="Qubits">
-        QB: <span class="value" id="qbVal">0</span>
-      </div>
-      <div class="pill" title="Universes">
-        MT: <span class="value" id="mtVal">0</span>
-      </div>
-      <div class="pill small" title="Idle generation">
-        +<span id="qeSec">0</span> QE/s · +<span id="qbSec">0</span> QB/s · +<span id="mtSec">0</span> MT/s
-      </div>
-      <div class="pill small" id="eventTag" style="display:none"></div>
-    </div>
-
-    <div class="panel" id="panel">
-      <h3>Upgrades & Phases</h3>
-      <button class="btn" id="btnClickBoost">Collapse Efficiency (+QE/click) — Cost: <span id="costClickBoost">10 QE</span></button>
-      <button class="btn" id="btnEntangle">Entanglement Chains (+multiplier) — Cost: <span id="costEntangle">25 QE</span></button>
-      <button class="btn" id="btnIdleQE">Quantum Drip (+QE/s) — Cost: <span id="costIdleQE">40 QE</span></button>
-      <hr style="opacity:.2"> 
-      <button class="btn" id="btnPhaseQB">Unlock Qubits (Quantum Computing) — Cost: <span id="costPhaseQB">500 QE</span></button>
-      <div id="qbTier" style="display:none">
-        <button class="btn" id="btnGrover">Grover Boost (×QE, ×QB) — Cost: <span id="costGrover">20 QB</span></button>
-        <button class="btn" id="btnShor">Shor Efficiency (+QB/s) — Cost: <span id="costShor">30 QB</span></button>
-        <button class="btn" id="btnPhaseMT">Unlock Multiverse — Cost: <span id="costPhaseMT">400 QB</span></button>
-      </div>
-      <div id="mtTier" style="display:none">
-        <button class="btn" id="btnMTIdle">Cosmic Synthesizer (+MT/s) — Cost: <span id="costMTIdle">2 MT</span></button>
-      </div>
-      <div class="small" style="opacity:.8;margin-top:6px">Tip: Click particles to collapse them for QE. Entangle for big multipliers. Rare events grant bursts!</div>
-    </div>
-
-    <div class="phase-tag" id="phaseTag">PHASE: Quantum Physics</div>
-
-    <div class="toasts" id="toasts"></div>
-  </div>
-
-  <!-- Main Menu -->
-  <div class="menu" id="menu">
-    <div class="menu-inner">
-      <div class="title">Quantum Idle</div>
-      <div class="subtitle">Collapse particles, harness qubits, and weave a multiverse of idle gains.</div>
-      <div class="menu-buttons">
-        <button class="menu-btn" id="btnStart">Start</button>
-        <button class="menu-btn secondary" id="btnSettings">Settings</button>
-        <button class="menu-btn secondary" id="btnCredits">Credits</button>
-      </div>
-      <div class="credits">A minimalist prototype. Vanilla JS + Canvas. Save auto-persisted.</div>
-    </div>
-    <div class="corner-credit">Made by Buff Shady</div>
-  </div>
-
-  <!-- Settings Modal -->
-  <div class="modal" id="settingsModal">
-    <div class="modal-card">
-      <h3 style="margin:0 0 8px">Settings (placeholder)</h3>
-      <div style="display:grid;gap:10px">
-        <label class="row"><span>Volume</span><input id="volume" type="range" min="0" max="1" step="0.01" value="0"></label>
-        <label class="row"><span>Graphics</span>
-          <select id="gfxMode">
-            <option value="high">High (effects on)</option>
-            <option value="low">Low (effects reduced)</option>
-          </select>
-        </label>
-        <div class="row"><button class="menu-btn secondary" id="btnWipe">Delete Save</button><button class="menu-btn" id="btnCloseSettings">Close</button></div>
-      </div>
+  <!-- NG-style preloader -->
+  <div class="preloader" id="preloader">
+    <div class="pre-inner">
+      <div class="ng-mark">Newgrounds Loading</div>
+      <div class="bar"><div class="fill" id="preFill"></div></div>
+      <div style="opacity:.8">Initializing Quantum Idle…</div>
     </div>
   </div>
 
-  <!-- Credits Modal -->
-  <div class="modal" id="creditsModal">
-    <div class="modal-card">
-      <h3 style="margin:0 0 8px">Credits</h3>
-      <p>Design & Code: Buff Shady</p>
-      <p>Quantum Idle — an idle/incremental concept mixing quantum physics, quantum computing, and a cosmic multiverse.</p>
-      <div style="text-align:right"><button class="menu-btn" id="btnCloseCredits">Close</button></div>
+  <!-- Scaled stage for NG iframe -->
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+      <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+      <div class="ui" id="ui">
+        <div class="hud">
+          <div class="pill" title="Quantum Energy">
+            QE: <span class="value" id="qeVal">0</span>
+          </div>
+          <div class="pill" title="Qubits">
+            QB: <span class="value" id="qbVal">0</span>
+          </div>
+          <div class="pill" title="Universes">
+            MT: <span class="value" id="mtVal">0</span>
+          </div>
+          <div class="pill small" title="Idle generation">
+            +<span id="qeSec">0</span> QE/s · +<span id="qbSec">0</span> QB/s · +<span id="mtSec">0</span> MT/s
+          </div>
+          <div class="pill small" id="eventTag" style="display:none"></div>
+          <button class="fs-btn" id="fsBtn" title="Fullscreen (if allowed)">⤢</button>
+        </div>
+
+        <div class="panel" id="panel">
+          <h3>Upgrades & Phases</h3>
+          <button class="btn" id="btnClickBoost">Collapse Efficiency (+QE/click) — Cost: <span id="costClickBoost">10 QE</span></button>
+          <button class="btn" id="btnEntangle">Entanglement Chains (+multiplier) — Cost: <span id="costEntangle">25 QE</span></button>
+          <button class="btn" id="btnIdleQE">Quantum Drip (+QE/s) — Cost: <span id="costIdleQE">40 QE</span></button>
+          <hr style="opacity:.2"> 
+          <button class="btn" id="btnPhaseQB">Unlock Qubits (Quantum Computing) — Cost: <span id="costPhaseQB">500 QE</span></button>
+          <div id="qbTier" style="display:none">
+            <button class="btn" id="btnGrover">Grover Boost (×QE, ×QB) — Cost: <span id="costGrover">20 QB</span></button>
+            <button class="btn" id="btnShor">Shor Efficiency (+QB/s) — Cost: <span id="costShor">30 QB</span></button>
+            <button class="btn" id="btnPhaseMT">Unlock Multiverse — Cost: <span id="costPhaseMT">400 QB</span></button>
+          </div>
+          <div id="mtTier" style="display:none">
+            <button class="btn" id="btnMTIdle">Cosmic Synthesizer (+MT/s) — Cost: <span id="costMTIdle">2 MT</span></button>
+          </div>
+          <div class="small" style="opacity:.8;margin-top:6px">Tip: Click or tap particles to collapse them for QE. Entangle for big multipliers. Rare events grant bursts!</div>
+        </div>
+
+        <div class="phase-tag" id="phaseTag">PHASE: Quantum Physics</div>
+        <div class="toasts" id="toasts"></div>
+        <div class="touch-hint" id="touchHint" style="display:none">Tap particles • Pinch zoom disabled</div>
+      </div>
+
+      <!-- Main Menu -->
+      <div class="menu" id="menu">
+        <div class="menu-inner">
+          <div class="title">Quantum Idle</div>
+          <div class="subtitle">Collapse particles, harness qubits, and weave a multiverse of idle gains.</div>
+          <div class="menu-buttons">
+            <button class="menu-btn" id="btnStart">Start</button>
+            <button class="menu-btn secondary" id="btnSettings">Settings</button>
+            <button class="menu-btn secondary" id="btnCredits">Credits</button>
+          </div>
+          <div class="credits">Newgrounds-ready build • Vanilla JS + Canvas • Auto-save enabled</div>
+        </div>
+        <div class="corner-credit">Made by Buff Shady</div>
+      </div>
+
+      <!-- Settings Modal -->
+      <div class="modal" id="settingsModal">
+        <div class="modal-card">
+          <h3 style="margin:0 0 8px">Settings (placeholder)</h3>
+          <div style="display:grid;gap:10px">
+            <label class="row"><span>Volume</span><input id="volume" type="range" min="0" max="1" step="0.01" value="0"></label>
+            <label class="row"><span>Graphics</span>
+              <select id="gfxMode">
+                <option value="high">High (effects on)</option>
+                <option value="low">Low (effects reduced)</option>
+              </select>
+            </label>
+            <div class="row"><button class="menu-btn secondary" id="btnWipe">Delete Save</button><button class="menu-btn" id="btnCloseSettings">Close</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Credits Modal -->
+      <div class="modal" id="creditsModal">
+        <div class="modal-card">
+          <h3 style="margin:0 0 8px">Credits</h3>
+          <p>Design & Code: Buff Shady</p>
+          <p>Quantum Idle — an idle/incremental concept mixing quantum physics, quantum computing, and a cosmic multiverse.</p>
+          <div style="text-align:right"><button class="menu-btn" id="btnCloseCredits">Close</button></div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
   // =============================
-  // Quantum Idle — Vanilla JS + Canvas
-  // One-file prototype. Expandable architecture.
+  // Quantum Idle — Newgrounds-ready single-file build
+  // - Fixed logical stage 1280x720 with pixel-perfect scaling for iframe
+  // - NG-style preloader (no external API)
+  // - Touch support (tap = click)
+  // - Clean, commented, expandable
   // =============================
   (() => {
-    // Canvas setup
+    const BASE_W = 1280, BASE_H = 720;
+
+    // --- Stage scaling ---
+    const stage = document.getElementById('stage');
+    function fit() {
+      const sw = window.innerWidth, sh = window.innerHeight;
+      const scale = Math.min(sw / BASE_W, sh / BASE_H);
+      stage.style.transform = `scale(${scale}) translateZ(0)`;
+    }
+    addEventListener('resize', fit, { passive: true });
+
+    // Canvas setup (internal resolution fixed to BASE_W x BASE_H)
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-
-    function resize() {
-      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      canvas.width = Math.floor(innerWidth * dpr);
-      canvas.height = Math.floor(innerHeight * dpr);
-      canvas.style.width = innerWidth + 'px';
-      canvas.style.height = innerHeight + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    addEventListener('resize', resize);
-    resize();
 
     // UI elements
     const menu = document.getElementById('menu');
@@ -174,6 +213,8 @@
     const btnCloseCredits = document.getElementById('btnCloseCredits');
     const btnWipe = document.getElementById('btnWipe');
     const gfxModeSel = document.getElementById('gfxMode');
+    const fsBtn = document.getElementById('fsBtn');
+    const touchHint = document.getElementById('touchHint');
 
     const qeVal = document.getElementById('qeVal');
     const qbVal = document.getElementById('qbVal');
@@ -186,7 +227,7 @@
 
     const costClickBoost = document.getElementById('costClickBoost');
     const costEntangle = document.getElementById('costEntangle');
-    const costIdleQE = document.getElementById('costIdleQE');
+    the_costIdleQE = document.getElementById('costIdleQE');
     const costPhaseQB = document.getElementById('costPhaseQB');
     const costGrover = document.getElementById('costGrover');
     const costShor = document.getElementById('costShor');
@@ -204,10 +245,9 @@
 
     const qbTier = document.getElementById('qbTier');
     const mtTier = document.getElementById('mtTier');
-
     const toasts = document.getElementById('toasts');
 
-    // ======= Utilities =======
+    // --- Utilities ---
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const lerp = (a, b, t) => a + (b - a) * t;
     const rand = (a=0,b=1)=>Math.random()*(b-a)+a;
@@ -215,6 +255,7 @@
     const now = () => performance.now()/1000;
 
     function nfmt(n) {
+      if (!isFinite(n)) return '∞';
       if (n < 1000) return n.toFixed(0);
       const units = ['k','M','B','T','Qa','Qi','Sx','Sp','Oc','No','De'];
       let u = -1;
@@ -233,7 +274,7 @@
       setTimeout(()=>{ el.remove(); }, 4200);
     }
 
-    // ======= Game State =======
+    // --- Game State ---
     const State = {
       phase: 'menu', // 'physics' | 'computing' | 'multiverse'
       gfx: 'high',
@@ -268,23 +309,22 @@
       mtIdle: (lv)=> 2 * Math.pow(2.2, lv)
     };
 
-    // Particles
+    // Entities
     const particles = [];
     const entangles = []; // pairs of indices for visuals & multiplier
-    const floatingTexts = [];
     const stars = [];
 
     function initStars() {
       stars.length = 0;
-      for (let i=0;i<200;i++) stars.push({ x: rand(0, innerWidth), y: rand(0, innerHeight), r: rand(0.5,1.8), t: rand(0, Math.PI*2) });
+      for (let i=0;i<220;i++) stars.push({ x: rand(0, BASE_W), y: rand(0, BASE_H), r: rand(0.5,1.8), t: rand(0, Math.PI*2) });
     }
 
-    function spawnParticles(n=24) {
+    function spawnParticles(n=26) {
       particles.length = 0;
       for (let i=0;i<n;i++) {
         particles.push({
-          x: rand(80, innerWidth-80),
-          y: rand(100, innerHeight-100),
+          x: rand(80, BASE_W-80),
+          y: rand(100, BASE_H-100),
           vx: rand(-30,30),
           vy: rand(-30,30),
           r: rand(6,10),
@@ -314,7 +354,8 @@
       el.style.top = y+'px';
       el.style.color = color || 'white';
       el.style.opacity = '1';
-      document.body.appendChild(el);
+      // attach inside the stage (so it scales with canvas)
+      stage.appendChild(el);
       const start = performance.now();
       function anim() {
         const t = (performance.now()-start)/1000;
@@ -325,22 +366,16 @@
       requestAnimationFrame(anim);
     }
 
-    // ======= Save / Load =======
-    const SAVE_KEY = 'quantum_idle_save_v1';
+    // --- Save / Load ---
+    const SAVE_KEY = 'quantum_idle_ng_v1';
     function save() {
-      try {
-        const data = JSON.stringify(State);
-        localStorage.setItem(SAVE_KEY, data);
-      } catch(e) { /* ignore */ }
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(State)); } catch(e) {}
     }
     function load() {
-      try {
-        const data = localStorage.getItem(SAVE_KEY);
-        if (data) Object.assign(State, JSON.parse(data));
-      } catch(e) { /* ignore */ }
+      try { const d = localStorage.getItem(SAVE_KEY); if (d) Object.assign(State, JSON.parse(d)); } catch(e) {}
     }
 
-    // ======= Phase Handling =======
+    // --- Phase Handling ---
     function setPhase(p) {
       State.phase = p;
       phaseTag.textContent = 'PHASE: ' + (p==='physics'?'Quantum Physics': p==='computing'?'Quantum Computing':'Multiverse');
@@ -349,18 +384,13 @@
       State.glowWave = 2.2; // trigger glow wave visual
       randomEntangleNetwork();
     }
+    function phaseShift(toPhase, toastMsg) { setPhase(toPhase); makeToast(toastMsg, 'good'); }
 
-    function phaseShift(toPhase, toastMsg) {
-      setPhase(toPhase);
-      makeToast(toastMsg, 'good');
-    }
-
-    // ======= Rare Events =======
+    // --- Rare Events ---
     function tryRandomEvents(dt) {
-      // Baseline chances per second (scaled by dt)
-      const stormChance = (State.phase!=='menu') ? 0.0005 : 0; // Quantum Storm
-      const collapseChance = (State.phase!=='menu') ? 0.0006 : 0; // Particle Collapse burst
-      const chainChance = (State.phase==='multiverse') ? 0.00035 : 0; // Universe Chain
+      const stormChance = (State.phase!=='menu') ? 0.0005 : 0;
+      const collapseChance = (State.phase!=='menu') ? 0.0006 : 0;
+      const chainChance = (State.phase==='multiverse') ? 0.00035 : 0;
 
       if (Math.random() < stormChance * dt * 60) {
         State.buffs.stormUntil = now() + 20; // 20s buff
@@ -369,41 +399,33 @@
         eventTag.textContent = 'Quantum Storm ×3';
       }
       if (Math.random() < collapseChance * dt * 60) {
-        // Burst QE and sparkle
         const gain = 50 * (1 + State.entangleLevel) * totalQEMult();
         State.QE += gain;
-        floating(innerWidth*0.5, innerHeight*0.5, '+'+nfmt(gain)+' QE (Collapse!)', 'var(--good)');
+        floating(BASE_W*0.5, BASE_H*0.5, '+'+nfmt(gain)+' QE (Collapse!)', 'var(--good)');
         makeToast('Particle Collapse — energy surge!', 'warn');
-        // spawn more particles briefly
-        for (let i=0;i<6;i++) particles.push({x:rand(40,innerWidth-40),y:rand(60,innerHeight-60),vx:rand(-60,60),vy:rand(-60,60),r:rand(5,9),phase:rand(0,6.28),energy:1});
+        for (let i=0;i<6;i++) particles.push({x:rand(40,BASE_W-40),y:rand(60,BASE_H-60),vx:rand(-60,60),vy:rand(-60,60),r:rand(5,9),phase:rand(0,6.28),energy:1});
       }
       if (Math.random() < chainChance * dt * 60) {
-        // Universe Chain event — MT burst + supernova flash
         const gain = 1 + State.mtIdleLevel*0.5;
         State.MT += gain;
         State.supernovaFlash = 1.0;
-        floating(innerWidth*0.5, innerHeight*0.4, '+'+gain.toFixed(2)+' MT (Universe Chain!)', '#ffd36d');
+        floating(BASE_W*0.5, BASE_H*0.4, '+'+gain.toFixed(2)+' MT (Universe Chain!)', '#ffd36d');
         makeToast('Universe Chain! New realities ripple outward.', 'good');
       }
-
-      // clear event tag when storm ends
-      if (State.buffs.stormUntil && now() > State.buffs.stormUntil) {
-        State.buffs.stormUntil = 0;
-        eventTag.style.display='none';
-      }
+      if (State.buffs.stormUntil && now() > State.buffs.stormUntil) { State.buffs.stormUntil = 0; eventTag.style.display='none'; }
     }
 
-    // ======= Multipliers =======
+    // --- Multipliers ---
     function totalQEMult() {
       let m = State.multipliers.qe;
-      m *= 1 + 0.15 * State.entangleLevel; // each entangle upgrade adds 15%
-      m *= 1 + 0.25 * State.groverLevel;   // Grover amplifies QE
+      m *= 1 + 0.15 * State.entangleLevel;
+      m *= 1 + 0.25 * State.groverLevel;
       if (State.buffs.stormUntil > now()) m *= 3;
       return m;
     }
     function totalQBMult() {
       let m = State.multipliers.qb;
-      m *= 1 + 0.25 * State.groverLevel; // Grover helps QB too
+      m *= 1 + 0.25 * State.groverLevel;
       if (State.buffs.stormUntil > now()) m *= 2;
       return m;
     }
@@ -413,7 +435,7 @@
       return m;
     }
 
-    // ======= Costs & Labels =======
+    // --- Costs & HUD ---
     function refreshCosts() {
       costClickBoost.textContent = nfmt(Costs.clickBoost(State.clickBoost)) + ' QE';
       costEntangle.textContent = nfmt(Costs.entangle(State.entangleLevel)) + ' QE';
@@ -424,103 +446,111 @@
       costPhaseMT.textContent = nfmt(Costs.phaseMT()) + ' QB';
       costMTIdle.textContent = nfmt(Costs.mtIdle(State.mtIdleLevel)) + ' MT';
     }
-
     function refreshHUD() {
       qeVal.textContent = nfmt(State.QE);
       qbVal.textContent = nfmt(State.QB);
       mtVal.textContent = nfmt(State.MT);
-      // idle rates
       qeSec.textContent = (State.qePerSec*totalQEMult()).toFixed(2);
       qbSec.textContent = (State.qbPerSec*totalQBMult()).toFixed(2);
       mtSec.textContent = (State.mtPerSec*totalMTMult()).toFixed(2);
       refreshCosts();
     }
 
-    // ======= Upgrade Handlers =======
+    // --- Upgrades ---
     function buyClickBoost() {
       const c = Costs.clickBoost(State.clickBoost);
-      if (State.QE < c) return;
-      State.QE -= c; State.clickBoost++;
+      if (State.QE < c) return; State.QE -= c; State.clickBoost++;
       State.qePerClick = 1 + State.clickBoost * 0.8;
       makeToast('Collapse Efficiency upgraded!', 'good');
     }
     function buyEntangle() {
       const c = Costs.entangle(State.entangleLevel);
-      if (State.QE < c) return;
-      State.QE -= c; State.entangleLevel++;
+      if (State.QE < c) return; State.QE -= c; State.entangleLevel++;
       randomEntangleNetwork();
       makeToast('Entanglement Chains strengthened. Multiplier up!', 'good');
     }
     function buyIdleQE() {
       const c = Costs.idleQE(State.idleQELevel);
-      if (State.QE < c) return;
-      State.QE -= c; State.idleQELevel++;
-      State.qePerSec += 0.6 * State.idleQELevel; // compounding increase
+      if (State.QE < c) return; State.QE -= c; State.idleQELevel++;
+      State.qePerSec += 0.6 * State.idleQELevel;
       makeToast('Quantum Drip increased QE/s.', 'good');
     }
-
     function unlockQubits() {
       const c = Costs.phaseQB();
-      if (State.QE < c) return;
-      State.QE -= c;
+      if (State.QE < c) return; State.QE -= c;
       if (State.phase==='physics') phaseShift('computing', 'Quantum Computing unlocked — Qubits online!');
-      State.qbPerSec = 0.2; // base
+      State.qbPerSec = 0.2;
     }
     function buyGrover() {
       const c = Costs.grover(State.groverLevel);
-      if (State.QB < c) return;
-      State.QB -= c; State.groverLevel++;
+      if (State.QB < c) return; State.QB -= c; State.groverLevel++;
       makeToast("Grover's algorithm amplifies your search for energy.", 'good');
     }
     function buyShor() {
       const c = Costs.shor(State.shorLevel);
-      if (State.QB < c) return;
-      State.QB -= c; State.shorLevel++;
-      State.qbPerSec += 0.25 * State.shorLevel; // grows
+      if (State.QB < c) return; State.QB -= c; State.shorLevel++;
+      State.qbPerSec += 0.25 * State.shorLevel;
       makeToast("Shor's algorithm optimizes qubit throughput.", 'good');
     }
     function unlockMultiverse() {
       const c = Costs.phaseMT();
-      if (State.QB < c) return;
-      State.QB -= c;
+      if (State.QB < c) return; State.QB -= c;
       if (State.phase!=='multiverse') phaseShift('multiverse', 'Multiverse unlocked — weave new realities!');
-      State.mtPerSec = 0.02; // slow baseline
+      State.mtPerSec = 0.02;
     }
     function buyMTIdle() {
       const c = Costs.mtIdle(State.mtIdleLevel);
-      if (State.MT < c) return;
-      State.MT -= c; State.mtIdleLevel++;
+      if (State.MT < c) return; State.MT -= c; State.mtIdleLevel++;
       State.mtPerSec += 0.015 * State.mtIdleLevel;
       makeToast('Cosmic Synthesizer hums louder (+MT/s).', 'good');
     }
 
-    // ======= Input / Clicking =======
-    canvas.addEventListener('click', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    // --- Input (Mouse + Touch) ---
+    function screenToStage(clientX, clientY) {
+      // Map from window coords to 1280x720 logical coords
+      const rect = stage.getBoundingClientRect();
+      const scale = rect.width / BASE_W; // uniform scale (because we scale isotropically)
+      const sx = (clientX - rect.left) / scale;
+      const sy = (clientY - rect.top) / scale;
+      return { x: clamp(sx, 0, BASE_W), y: clamp(sy, 0, BASE_H) };
+    }
+
+    function handleClickAt(logicalX, logicalY) {
       // find nearest particle within radius
       let best = null, bestD = 36;
       for (let i=0;i<particles.length;i++) {
         const p = particles[i];
-        const dx = x - p.x, dy = y - p.y; const d2 = dx*dx + dy*dy;
+        const dx = logicalX - p.x, dy = logicalY - p.y; const d2 = dx*dx + dy*dy;
         if (d2 < bestD*bestD) { best = p; bestD = Math.sqrt(d2); }
       }
       if (best) {
         const gain = (State.qePerClick) * totalQEMult();
         State.QE += gain;
         best.vx += rand(-40,40); best.vy += rand(-40,40);
-        floating(x, y-8, '+'+gain.toFixed(2)+' QE', 'var(--accent)');
-      } else {
-        // click empty space — small chance to spark
-        if (Math.random() < 0.05) {
-          const gain = 0.5 * totalQEMult();
-          State.QE += gain; floating(x,y-8,'+'+gain.toFixed(2)+' QE','var(--accent2)');
-        }
+        floating(logicalX, logicalY-8, '+'+gain.toFixed(2)+' QE', 'var(--accent)');
+      } else if (Math.random() < 0.05) {
+        const gain = 0.5 * totalQEMult();
+        State.QE += gain; floating(logicalX,logicalY-8,'+'+gain.toFixed(2)+' QE','var(--accent2)');
       }
+    }
+
+    canvas.addEventListener('click', (e) => {
+      const {x,y} = screenToStage(e.clientX, e.clientY);
+      handleClickAt(x,y);
     });
 
-    // Button bindings
+    // Touch support
+    let isTouch = false;
+    addEventListener('touchstart', (e) => {
+      isTouch = true; touchHint.style.display = 'block';
+      const t = e.changedTouches[0]; if (!t) return;
+      const {x,y} = screenToStage(t.clientX, t.clientY);
+      handleClickAt(x,y);
+    }, { passive: true });
+    addEventListener('touchmove', (e) => { /* no panning */ }, { passive: true });
+    addEventListener('gesturestart', (e) => { e.preventDefault(); }, { passive: false });
+
+    // Buttons
     btnClickBoost.onclick = buyClickBoost;
     btnEntangle.onclick = buyEntangle;
     btnIdleQE.onclick = buyIdleQE;
@@ -539,89 +569,66 @@
     btnWipe.onclick = () => { localStorage.removeItem(SAVE_KEY); location.reload(); };
     gfxModeSel.onchange = () => { State.gfx = gfxModeSel.value; };
 
-    // ======= Init =======
+    // Fullscreen (may be blocked in NG iframe; works when allowed)
+    fsBtn.onclick = async () => { try { await stage.requestFullscreen(); } catch(e) { makeToast('Fullscreen not allowed by host frame.', 'bad'); } };
+
+    // --- Init ---
     load();
     gfxModeSel.value = State.gfx || 'high';
-    if (State.phase === 'menu') {
-      menu.style.display = 'grid';
-    } else {
-      menu.style.display = 'none';
-    }
-
+    if (State.phase === 'menu') menu.style.display = 'grid'; else menu.style.display='none';
     initStars();
     spawnParticles(28);
     if (State.phase==='menu') setPhase('physics');
 
-    // ======= Game Loop =======
+    // --- Game Loop ---
     let last = now();
     let saveTimer = 0;
 
     function tick() {
       const t = now();
-      let dt = clamp(t - last, 0, 0.1);
-      last = t;
+      let dt = clamp(t - last, 0, 0.1); last = t;
 
       // Resource ticks
-      const qeGain = State.qePerSec * totalQEMult() * dt;
-      State.QE += qeGain;
-      if (State.phase!=='physics') {
-        const qbGain = (State.qbPerSec * totalQBMult()) * dt;
-        State.QB += qbGain;
-      }
-      if (State.phase==='multiverse') {
-        const mtGain = (State.mtPerSec * totalMTMult()) * dt;
-        State.MT += mtGain;
-      }
+      State.QE += State.qePerSec * totalQEMult() * dt;
+      if (State.phase!=='physics') State.QB += (State.qbPerSec * totalQBMult()) * dt;
+      if (State.phase==='multiverse') State.MT += (State.mtPerSec * totalMTMult()) * dt;
 
-      // Random events
       tryRandomEvents(dt);
 
-      // Physics — move particles
+      // Particle motion
       const speedMul = State.gfx==='low'?0.6:1;
       for (const p of particles) {
         p.x += p.vx * dt * speedMul;
         p.y += p.vy * dt * speedMul;
         p.vx += Math.sin(p.phase + t*0.5) * 4 * dt;
         p.vy += Math.cos(p.phase + t*0.5) * 4 * dt;
-        // bounce
-        if (p.x < 20 || p.x > innerWidth-20) p.vx *= -1;
-        if (p.y < 40 || p.y > innerHeight-40) p.vy *= -1;
+        if (p.x < 20 || p.x > BASE_W-20) p.vx *= -1;
+        if (p.y < 40 || p.y > BASE_H-40) p.vy *= -1;
       }
 
-      // Visual timers
       State.glowWave = Math.max(0, State.glowWave - dt);
       State.supernovaFlash = Math.max(0, State.supernovaFlash - dt*0.8);
 
-      // Render
-      draw(t, dt);
-
-      // UI
+      draw(t);
       refreshHUD();
 
-      // Periodic save
-      saveTimer += dt;
-      if (saveTimer > 10) { save(); saveTimer = 0; }
-
+      saveTimer += dt; if (saveTimer > 10) { save(); saveTimer = 0; }
       requestAnimationFrame(tick);
     }
 
-    // ======= Rendering =======
-    function draw(t, dt) {
-      // Background — starfield + nebulas
+    // --- Rendering ---
+    function draw(t) {
       drawSpace(t);
 
       // Entanglement lines
-      ctx.save();
-      ctx.globalCompositeOperation = 'screen';
+      ctx.save(); ctx.globalCompositeOperation = 'screen';
       for (const [a,b] of entangles) {
         const p = particles[a], q = particles[b]; if (!p||!q) continue;
-        const dx = q.x - p.x, dy = q.y - p.y;
-        const d = Math.hypot(dx, dy);
+        const dx = q.x - p.x, dy = q.y - p.y; const d = Math.hypot(dx, dy);
         const alpha = clamp(200/d, 0.1, 0.8);
         const hue = 200 + 40*Math.sin(t + a*0.3);
         ctx.strokeStyle = `hsla(${hue}, 95%, 70%, ${alpha})`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+        ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
       }
       ctx.restore();
 
@@ -639,33 +646,28 @@
       // Phase shift glow wave
       if (State.glowWave > 0) {
         const k = 1 - (State.glowWave/2.2);
-        const r = Math.max(innerWidth, innerHeight) * (k*1.2+0.1);
-        const g = ctx.createRadialGradient(innerWidth/2, innerHeight/2, 0, innerWidth/2, innerHeight/2, r);
+        const r = Math.max(BASE_W, BASE_H) * (k*1.2+0.1);
+        const g = ctx.createRadialGradient(BASE_W/2, BASE_H/2, 0, BASE_W/2, BASE_H/2, r);
         const hue = (State.phase==='physics')? 190 : (State.phase==='computing'? 280: 40);
         g.addColorStop(0, `hsla(${hue},90%,70%,0.35)`);
         g.addColorStop(1, `hsla(${hue},90%,30%,0)`);
-        ctx.fillStyle = g; ctx.fillRect(0,0,innerWidth,innerHeight);
+        ctx.fillStyle = g; ctx.fillRect(0,0,BASE_W,BASE_H);
       }
 
       // Supernova flash overlay
-      if (State.supernovaFlash > 0) {
-        ctx.fillStyle = `rgba(255, 240, 180, ${State.supernovaFlash})`;
-        ctx.fillRect(0,0,innerWidth,innerHeight);
-      }
+      if (State.supernovaFlash > 0) { ctx.fillStyle = `rgba(255, 240, 180, ${State.supernovaFlash})`; ctx.fillRect(0,0,BASE_W,BASE_H); }
     }
 
     function drawSpace(t) {
-      // ambient gradient that shifts with phase
       const baseHue = (State.phase==='physics')? 210 : (State.phase==='computing'? 270 : 32);
       const shift = 20 * Math.sin(t*0.1);
-      const grad = ctx.createLinearGradient(0, 0, innerWidth, innerHeight);
+      const grad = ctx.createLinearGradient(0, 0, BASE_W, BASE_H);
       grad.addColorStop(0, `hsl(${baseHue+shift}, 40%, 10%)`);
       grad.addColorStop(1, `hsl(${baseHue-20+shift}, 50%, 6%)`);
-      ctx.fillStyle = grad; ctx.fillRect(0,0,innerWidth,innerHeight);
+      ctx.fillStyle = grad; ctx.fillRect(0,0,BASE_W,BASE_H);
 
       // twinkling stars
-      ctx.save();
-      ctx.globalCompositeOperation = 'screen';
+      ctx.save(); ctx.globalCompositeOperation = 'screen';
       for (const s of stars) {
         s.t += 0.8 * (State.gfx==='low'?0.3:1) * (0.5 + 0.5*Math.random());
         const a = 0.3 + 0.7*(0.5+0.5*Math.sin(s.t*0.2));
@@ -674,24 +676,23 @@
       }
       ctx.restore();
 
-      // nebulas via soft noise-like blobs (animated gradients)
+      // nebulas via soft noise-like blobs
       if (State.gfx==='high') {
         for (let i=0;i<3;i++) {
-          const cx = innerWidth*(0.3+i*0.25 + 0.05*Math.sin(t*0.1 + i));
-          const cy = innerHeight*(0.3+0.1*Math.cos(t*0.12 + i));
-          const r = Math.min(innerWidth, innerHeight) * (0.35 + 0.08*Math.sin(t*0.2 + i));
+          const cx = BASE_W*(0.3+i*0.25 + 0.05*Math.sin(t*0.1 + i));
+          const cy = BASE_H*(0.3+0.1*Math.cos(t*0.12 + i));
+          const r = Math.min(BASE_W, BASE_H) * (0.35 + 0.08*Math.sin(t*0.2 + i));
           const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
           const hue = baseHue + 20*Math.sin(t*0.15 + i);
           g.addColorStop(0, `hsla(${hue}, 80%, 40%, 0.18)`);
           g.addColorStop(1, `hsla(${hue}, 90%, 25%, 0)`);
-          ctx.fillStyle = g; ctx.fillRect(0,0,innerWidth,innerHeight);
+          ctx.fillStyle = g; ctx.fillRect(0,0,BASE_W,BASE_H);
         }
       }
     }
 
-    // ======= UI Update (enable/disable) =======
+    // --- Buttons enable/disable ---
     function updateButtons() {
-      // helper to set enabled state
       function setBtn(btn, can) { btn.classList.toggle('disabled', !can); btn.disabled = !can; }
       setBtn(btnClickBoost, State.QE >= Costs.clickBoost(State.clickBoost));
       setBtn(btnEntangle, State.QE >= Costs.entangle(State.entangleLevel));
@@ -706,11 +707,29 @@
       mtTier.style.display = (State.phase==='multiverse') ? 'block' : 'none';
     }
 
-    // ======= Start =======
-    refreshCosts();
-    setInterval(updateButtons, 200);
-    requestAnimationFrame(tick);
+    // --- NG-style Preloader logic ---
+    const pre = document.getElementById('preloader');
+    const preFill = document.getElementById('preFill');
+    let fake = 0;
+    function preTick() {
+      fake = Math.min(1, fake + 0.06 + Math.random()*0.08); // 0.06–0.14 per frame
+      preFill.style.width = (fake*100).toFixed(0)+'%';
+      if (fake >= 1) {
+        pre.style.transition = 'opacity .35s ease';
+        pre.style.opacity = '0';
+        setTimeout(()=>{ pre.remove(); startGame(); }, 380);
+      } else requestAnimationFrame(preTick);
+    }
 
+    function startGame() {
+      fit();
+      refreshCosts();
+      setInterval(updateButtons, 200);
+      requestAnimationFrame(tick);
+    }
+
+    // Kick off preloader a moment after DOM ready
+    requestAnimationFrame(()=>{ setTimeout(preTick, 100); });
   })();
   </script>
 </body>
